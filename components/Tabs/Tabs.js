@@ -17,17 +17,10 @@ class TabItem {
 }
 
 class TabLink {
-  constructor(element, parent) {
+  constructor(element) {
     this.element = element; // attach dom element to object
-    this.tabs = parent;// attach parent to object
-    this.tabItem = parent.getTab(this.element.dataset.tab); // assign this to the associated tab using the parent's "getTab" method by passing it the correct data
-    // reassign this.tabItem to be a new instance of TabItem, passing it this.tabItem
+    this.tabItem = this.getTab(element.dataset);
     this.tabItem = new TabItem(this.tabItem);
-
-    this.element.addEventListener('click', () => {
-      this.tabs.updateActive(this);
-      this.select();
-    });
   };
 
   select() {
@@ -40,8 +33,15 @@ class TabLink {
   deselect() {
     // deselect this link
     // deselect the associated tab
-    this.element.classList.add('Tabs__link-selected');
+    this.element.classList.remove('Tabs__link-selected');
     this.tabItem.deselect();
+  }
+
+  getTab(data) {
+    // use the tab item classname and the data attribute to select the proper tab
+    return Array.from(this.element.parentNode.parentNode.querySelectorAll('.Tabs__item')).find((item) => {
+      return item.dataset.tab === data.tab;
+    });
   }
 }
 
@@ -50,7 +50,13 @@ class Tabs {
     this.element = element; // attaches the dom node to the object as "this.element"
     this.links = element.querySelectorAll(".Tabs__link");
     this.links = Array.from(this.links).map((link) => {
-      return new TabLink(link, this);
+      const newLink = new TabLink(link);
+      link.addEventListener('click', () => {
+        // console.log('clicked!');
+        this.updateActive(newLink);
+        newLink.select();
+      });
+      return newLink;
     });
     this.activeLink = this.links[0];
     this.init();
@@ -68,10 +74,6 @@ class Tabs {
     this.activeLink = newActive;
   }
 
-  getTab(data) {
-    // use the tab item classname and the data attribute to select the proper tab
-    return this.element.querySelector(`.Tabs__item[data-tab="${data}"]`);
-  }
 }
 
 let tabs = document.querySelectorAll(".Tabs");
